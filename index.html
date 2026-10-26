@@ -148,18 +148,33 @@ async function loadFF(){
   if (typeof FFmpegWASM === 'undefined' || typeof FFmpegUtil === 'undefined')
     throw new Error('โหลดไลบรารีจาก CDN ไม่สำเร็จ — ต้องเปิดผ่านเน็ตและผ่านลิงก์ https (เช่น GitHub Pages) ไม่ใช่พรีวิวในแชท');
   const { FFmpeg } = FFmpegWASM, { toBlobURL } = FFmpegUtil;
-  ff = new FFmpeg();
-  ff.on('log', ({ message }) => { const d=$('dbg'); d.textContent += message + '\n'; d.scrollTop = 1e9; });
-  ff.on('progress', ({ progress }) => {
-    if (progress >= 0 && progress <= 1) $('prog').style.width = (progress*100).toFixed(0) + '%';
-  });
   const cdn = 'https://cdn.jsdelivr.net/npm/';
-  await ff.load({
-    classWorkerURL: await toBlobURL(cdn+'@ffmpeg/ffmpeg@0.12.10/dist/umd/814.ffmpeg.js', 'text/javascript'),
-    coreURL: await toBlobURL(cdn+'@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.js', 'text/javascript'),
-    wasmURL: await toBlobURL(cdn+'@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.wasm', 'application/wasm'),
-  });
-  loaded = true;
+  const attempts = ['esm', 'umd'];
+  let lastErr = null;
+  for (const kind of attempts) {
+    try {
+      $('status').textContent = 'กำลังโหลดตัวตัดวิดีโอ (' + kind + ')...';
+      ff = new FFmpeg();
+      ff.on('log', ({ message }) => { const d=$('dbg'); d.textContent += message + '\n'; d.scrollTop = 1e9; });
+      ff.on('progress', ({ progress }) => {
+        if (progress >= 0 && progress <= 1) $('prog').style.width = (progress*100).toFixed(0) + '%';
+      });
+      const core = cdn + '@ffmpeg/core@0.12.6/dist/' + kind + '/';
+      await ff.load({
+        classWorkerURL: await toBlobURL(cdn+'@ffmpeg/ffmpeg@0.12.10/dist/umd/814.ffmpeg.js', 'text/javascript'),
+        coreURL: await toBlobURL(core + 'ffmpeg-core.js', 'text/javascript'),
+        wasmURL: await toBlobURL(core + 'ffmpeg-core.wasm', 'application/wasm'),
+      });
+      loaded = true; lastErr = null;
+      $('dbg').textContent += '[โหลดสำเร็จด้วยโหมด ' + kind + ']\n';
+      break;
+    } catch (e) {
+      lastErr = e;
+      $('dbg').textContent += '[โหมด ' + kind + ' ล้มเหลว: ' + (e.message || e) + ']\n';
+      try { ff.terminate(); } catch (_) {}
+    }
+  }
+  if (lastErr) throw lastErr;
 }
 
 function save(data, name){
