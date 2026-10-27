@@ -22,13 +22,21 @@ video{width:100%;max-height:340px;background:#000;border-radius:10px}
 .seg{display:grid;grid-template-columns:28px 1fr 100px 100px 34px;gap:6px;align-items:center;margin-bottom:6px}
 .seg .n{color:var(--mut);text-align:center}
 .seg button{padding:6px 0}
+.withEp .seg{grid-template-columns:28px 1fr 84px 96px 96px 34px}
+.seg .ep{display:none}.withEp .seg .ep{display:block}
+h3{font-size:.95rem;margin:14px 0 4px}
+select{background:var(--bg);color:var(--tx);border:1px solid var(--bd);border-radius:8px;padding:7px 9px;font:inherit}
+input[type=color]{width:44px;height:34px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);padding:2px}
+.dz{display:block;border:2px dashed var(--bd);border-radius:12px;padding:18px 12px;text-align:center;cursor:pointer;margin-top:6px}
+.dz.over{border-color:var(--ac);background:rgba(91,140,255,.08)}
+#ed{display:block;width:100%;border-radius:10px;margin-top:10px;background:#000;touch-action:none;user-select:none}
 .mut{color:var(--mut);font-size:.88rem}
 .bar{height:10px;background:var(--bd);border-radius:6px;overflow:hidden;margin-top:8px}
 .bar i{display:block;height:100%;width:0;background:var(--ac);transition:width .2s}
-#log{font-size:.88rem;white-space:pre-wrap;max-height:180px;overflow:auto;margin-top:8px}
+#log{font-size:.88rem;white-space:pre-wrap;max-height:220px;overflow:auto;margin-top:8px}
 .ok{color:var(--ok)}.er{color:var(--er)}
 label.chk{display:flex;gap:6px;align-items:center;font-size:.92rem}
-@media(max-width:560px){.seg{grid-template-columns:24px 1fr 80px 80px 30px}}
+@media(max-width:560px){.seg{grid-template-columns:24px 1fr 80px 80px 30px}.withEp .seg{grid-template-columns:24px 1fr 70px 76px 76px 30px}}
 </style>
 </head>
 <body>
@@ -37,8 +45,8 @@ label.chk{display:flex;gap:6px;align-items:center;font-size:.92rem}
 
 <div class="card">
   <h2>1. เลือกไฟล์วิดีโอจากเครื่อง</h2>
-  <input type="file" id="file" accept="video/*,.mkv,.mov,.avi,.ts">
-  <div class="mut" id="info" style="margin-top:6px">ไฟล์ไม่ถูกอัปโหลดไปไหน ประมวลผลในเครื่องคุณทั้งหมด</div>
+  <input type="file" id="file" accept=".mp4,.m4v,.mov,video/mp4,video/quicktime">
+  <div class="mut" id="info" style="margin-top:6px">รองรับ MP4 / MOV · ไฟล์ไม่ถูกอัปโหลดไปไหน ประมวลผลในเครื่องคุณทั้งหมด</div>
   <video id="v" controls style="margin-top:10px;display:none"></video>
 </div>
 
@@ -50,7 +58,7 @@ label.chk{display:flex;gap:6px;align-items:center;font-size:.92rem}
   </div>
   <div class="row">
     <span>หรือแบ่งเท่าๆ กันทุก</span>
-    <input type="number" id="every" value="10" min="1" style="width:80px">
+    <input type="number" id="every" value="10" min="1" step="any" style="width:80px">
     <span>นาที</span>
     <button class="sec" id="split">แบ่งอัตโนมัติ</button>
   </div>
@@ -59,172 +67,515 @@ label.chk{display:flex;gap:6px;align-items:center;font-size:.92rem}
 </div>
 
 <div class="card">
-  <h2>3. ตัดและดาวน์โหลด</h2>
-  <label class="chk"><input type="checkbox" id="accurate"> ตัดแม่นระดับเฟรม (เข้ารหัสใหม่ ช้ากว่ามาก)</label>
-  <div class="mut" style="margin:2px 0 8px 24px">ค่าเริ่มต้น: ไม่เข้ารหัสใหม่ เร็วมาก แต่จุดตัดอาจเลื่อนไปที่ keyframe ใกล้ที่สุด (คลาดไม่กี่วินาที)</div>
-  <label class="chk"><input type="checkbox" id="auto" checked> ดาวน์โหลดอัตโนมัติทุกครั้งที่ตัดเสร็จแต่ละตอน (ประหยัดหน่วยความจำ)</label>
+  <h2>3. แบนเนอร์ และข้อความ EP (ไม่บังคับ)</h2>
+  <div class="mut" style="margin-bottom:6px">ถ้าใช้ข้อใดข้อหนึ่ง ระบบต้องเข้ารหัสวิดีโอใหม่ ซึ่งใช้เวลาเท่าความยาวคลิป (คลิป 10 นาที ใช้ราว 10 นาที) และต้องเปิดแท็บนี้ค้างไว้บนหน้าจอ ห้ามสลับแท็บหรือปิดหน้าจอ ถ้าไม่ใช้ทั้งสองอย่าง จะตัดแบบเร็วเหมือนเดิม</div>
+
+  <label class="dz" id="dz">
+    <input type="file" id="banner" accept="image/*" hidden>
+    🖼️ <b>ลากรูปแบนเนอร์มาวางตรงนี้</b> หรือคลิกเพื่อเลือกรูป<br><span class="mut">วางจากคลิปบอร์ดด้วย Ctrl+V ก็ได้ · ลากวางที่ไหนก็ได้ในหน้านี้</span>
+    <div id="dzName" class="mut"></div>
+  </label>
+  <div class="row">
+    <button class="sec" id="bannerClear">ลบแบนเนอร์</button>
+    <button class="sec" id="bReset">รีเซ็ตตำแหน่ง</button>
+    <span>ความทึบ</span><input type="number" id="bOp" value="100" min="5" max="100" style="width:70px"><span class="mut">%</span>
+    <span>แสดงแบนเนอร์</span><input type="number" id="bSec" value="0" min="0" style="width:70px"><span class="mut">วินาทีแรก (0 = ตลอด)</span>
+  </div>
+
+  <canvas id="ed"></canvas>
+  <div class="row"><span class="mut">เลือกเฟรมตัวอย่าง</span><input type="range" id="edT" min="0" max="1000" value="0" style="flex:1;min-width:160px"></div>
+  <div class="mut" style="margin-top:4px">👆 <b>ลากแบนเนอร์/ข้อความบนภาพ</b> เพื่อย้าย · <b>ลากจุดมุมขวาล่าง</b> เพื่อย่อ/ขยาย · หมุนล้อเมาส์บนภาพก็ย่อ/ขยายได้ (ตำแหน่งและขนาดนี้ใช้กับทุกตอน)</div>
+
+  <h3>🔤 ข้อความ EP</h3>
+  <label class="chk"><input type="checkbox" id="epOn"> ใส่ข้อความบนวิดีโอ</label>
+  <div class="row">
+    <span>รูปแบบ</span><input type="text" id="epTpl" value="EP.{n}" style="width:120px">
+    <span>เริ่มที่เลข</span><input type="number" id="epStart" value="1" min="0" style="width:70px">
+    <button class="sec" id="epReset">ตั้งข้อความทุกตอนใหม่</button>
+  </div>
+  <div class="row">
+    <span>สี</span><input type="color" id="tColor" value="#ffffff">
+    <span>แสดงข้อความ</span><input type="number" id="tSec" value="0" min="0" style="width:70px"><span class="mut">วินาทีแรก (0 = ตลอด)</span>
+  </div>
+  <div class="mut" style="margin-top:4px">แก้ข้อความ EP ของแต่ละตอนได้ในช่อง EP ที่รายการตอนด้านบน (ช่องจะโผล่เมื่อติ๊กใส่ข้อความ)</div>
+
+  <h3>⚙️ คุณภาพภาพที่ได้</h3>
+  <div class="row" style="margin-top:4px">
+    <span>ความสูงสูงสุด</span><select id="maxH"><option value="720">720p</option><option value="1080" selected>1080p</option><option value="4320">ตามต้นฉบับ</option></select>
+    <span>บิตเรต</span><select id="bitrate"><option value="3">3 Mbps</option><option value="5" selected>5 Mbps</option><option value="8">8 Mbps</option></select>
+  </div>
+</div>
+
+<div class="card">
+  <h2>4. ตัดและดาวน์โหลด</h2>
+  <div class="mut" style="margin-bottom:8px">โหมดไม่ใส่แบนเนอร์/ข้อความ ตัดแบบไม่เข้ารหัสใหม่ (ภาพไม่เสียคุณภาพ เร็วมาก) จุดตัดจะเลื่อนถอยไปที่ keyframe ก่อนหน้า อาจคลาดเคลื่อนได้ราว 1–10 วินาทีตามไฟล์ ตอนที่ติดกันจะต่อกันพอดี ไม่ซ้ำไม่ขาด</div>
+  <label class="chk"><input type="checkbox" id="auto" checked> ดาวน์โหลดอัตโนมัติทุกครั้งที่ตัดเสร็จแต่ละตอน</label>
   <div class="row">
     <button id="go" disabled>เริ่มตัด</button>
     <span class="mut" id="status"></span>
   </div>
   <div class="bar"><i id="prog"></i></div>
   <div id="log"></div>
-  <details style="margin-top:8px"><summary class="mut">รายละเอียดทางเทคนิค (ส่งให้ผมถ้าตัดไม่ได้)</summary><div id="dbg" class="mut" style="white-space:pre-wrap;max-height:220px;overflow:auto;font-size:.8rem"></div></details>
+  <details style="margin-top:8px"><summary class="mut">รายละเอียดทางเทคนิค</summary><div id="dbg" class="mut" style="white-space:pre-wrap;max-height:220px;overflow:auto;font-size:.8rem"></div></details>
 </div>
 </main>
 
-<script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/dist/umd/index.js"></script>
 <script>
-const $ = id => document.getElementById(id);
-let file = null, duration = 0, segs = [], ff = null, loaded = false, busy = false;
+/*CORE*/
+const fourcc = (b, p) => String.fromCharCode(b[p], b[p+1], b[p+2], b[p+3]);
+async function readBytes(file, s, l){ return new Uint8Array(await file.slice(s, s + l).arrayBuffer()); }
 
+async function topBoxes(file){
+  const out = []; let pos = 0;
+  while (pos + 8 <= file.size) {
+    const h = await readBytes(file, pos, 16); const dv = new DataView(h.buffer);
+    let sz = dv.getUint32(0), hdr = 8; const type = fourcc(h, 4);
+    if (sz === 1) { if (h.length < 16) break; sz = Number(dv.getBigUint64(8)); hdr = 16; }
+    else if (sz === 0) sz = file.size - pos;
+    if (sz < hdr) break;
+    out.push({ type, pos, size: sz, hdr }); pos += sz;
+  }
+  return out;
+}
+function parseBoxes(buf, s, e){
+  const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength); const out = []; let p = s;
+  while (p + 8 <= e) {
+    let sz = dv.getUint32(p), hdr = 8; const type = fourcc(buf, p + 4);
+    if (sz === 1) { sz = Number(dv.getBigUint64(p + 8)); hdr = 16; } else if (sz === 0) sz = e - p;
+    if (sz < hdr || p + sz > e) break;
+    out.push({ type, start: p, end: p + sz, body: p + hdr }); p += sz;
+  }
+  return out;
+}
+const kid = (buf, b, t) => parseBoxes(buf, b.body, b.end).find(k => k.type === t);
+
+function parseTrack(buf, trak){
+  const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
+  const mdia = kid(buf, trak, 'mdia'); if (!mdia) return null;
+  const mdhd = kid(buf, mdia, 'mdhd'), hdlr = kid(buf, mdia, 'hdlr'), minf = kid(buf, mdia, 'minf');
+  const stbl = minf && kid(buf, minf, 'stbl'); if (!mdhd || !stbl) return null;
+  const ts = dv.getUint32(mdhd.body + (buf[mdhd.body] === 1 ? 20 : 12));
+  const handler = hdlr ? fourcc(buf, hdlr.body + 8) : '';
+  const g = t => kid(buf, stbl, t);
+  const stts = g('stts'), ctts = g('ctts'), stss = g('stss'), stsz = g('stsz'), stsc = g('stsc'), stco = g('stco') || g('co64');
+  if (!stts || !stsz || !stsc || !stco) return null;
+  const n = dv.getUint32(stsz.body + 8), fixed = dv.getUint32(stsz.body + 4);
+  const sizes = new Uint32Array(n);
+  for (let i = 0; i < n; i++) sizes[i] = fixed || dv.getUint32(stsz.body + 12 + 4 * i);
+  const dts = new Float64Array(n), delta = new Uint32Array(n);
+  { const c = dv.getUint32(stts.body + 4); let p = stts.body + 8, i = 0, t = 0, d = 0;
+    for (let k = 0; k < c; k++) { const cnt = dv.getUint32(p); d = dv.getUint32(p + 4); p += 8;
+      for (let j = 0; j < cnt && i < n; j++) { dts[i] = t; delta[i] = d; t += d; i++; } }
+    for (; i < n; i++) { dts[i] = t; delta[i] = d; t += d; } }
+  let cts = null, cttsVer = 0;
+  if (ctts) { cttsVer = buf[ctts.body]; cts = new Int32Array(n);
+    const c = dv.getUint32(ctts.body + 4); let p = ctts.body + 8, i = 0;
+    for (let k = 0; k < c; k++) { const cnt = dv.getUint32(p), o = dv.getInt32(p + 4); p += 8;
+      for (let j = 0; j < cnt && i < n; j++) cts[i++] = o; } }
+  let sync = null;
+  if (stss) { sync = new Uint8Array(n); const c = dv.getUint32(stss.body + 4);
+    for (let k = 0; k < c; k++) { const s = dv.getUint32(stss.body + 8 + 4 * k) - 1; if (s >= 0 && s < n) sync[s] = 1; } }
+  const is64 = stco.type === 'co64', nch = dv.getUint32(stco.body + 4);
+  const chunkOff = new Float64Array(nch);
+  for (let k = 0; k < nch; k++) chunkOff[k] = is64 ? Number(dv.getBigUint64(stco.body + 8 + 8 * k)) : dv.getUint32(stco.body + 8 + 4 * k);
+  const sc = []; { const c = dv.getUint32(stsc.body + 4); for (let k = 0; k < c; k++) { const p = stsc.body + 8 + 12 * k; sc.push([dv.getUint32(p), dv.getUint32(p + 4)]); } }
+  const offs = new Float64Array(n);
+  { let s = 0, e = 0;
+    for (let c = 0; c < nch && s < n; c++) {
+      while (e + 1 < sc.length && sc[e + 1][0] <= c + 1) e++;
+      let off = chunkOff[c];
+      for (let k = 0; k < sc[e][1] && s < n; k++) { offs[s] = off; off += sizes[s]; s++; } } }
+  const dur = n ? dts[n - 1] + delta[n - 1] : 0;
+  return { trak, ts, handler, n, sizes, dts, delta, cts, cttsVer, sync, offs, dur };
+}
+
+async function loadMp4(file){
+  const boxes = await topBoxes(file);
+  const moovB = boxes.find(b => b.type === 'moov');
+  if (!moovB) throw new Error('ไม่พบข้อมูลโครงสร้างวิดีโอ (moov) — ไม่ใช่ไฟล์ MP4/MOV แบบปกติ');
+  if (boxes.some(b => b.type === 'moof')) throw new Error('ไฟล์เป็น MP4 แบบ fragmented ซึ่งยังไม่รองรับ');
+  const moov = await readBytes(file, moovB.pos, moovB.size);
+  const root = { type: 'moov', start: 0, end: moov.length, body: moovB.hdr };
+  if (kid(moov, root, 'mvex')) throw new Error('ไฟล์เป็น MP4 แบบ fragmented ซึ่งยังไม่รองรับ');
+  const mvhd = kid(moov, root, 'mvhd'); if (!mvhd) throw new Error('ไฟล์เสียหาย (ไม่มี mvhd)');
+  const dv = new DataView(moov.buffer, moov.byteOffset, moov.byteLength);
+  const mvts = dv.getUint32(mvhd.body + (moov[mvhd.body] === 1 ? 20 : 12));
+  const tracks = [];
+  for (const k of parseBoxes(moov, root.body, root.end)) if (k.type === 'trak') { const t = parseTrack(moov, k); if (t && t.n) tracks.push(t); }
+  if (!tracks.length) throw new Error('ไม่พบแทร็กวิดีโอ/เสียงที่อ่านได้');
+  const master = tracks.find(t => t.handler === 'vide') || tracks[0];
+  const ftypB = boxes.find(b => b.type === 'ftyp');
+  const ftyp = ftypB ? await readBytes(file, ftypB.pos, ftypB.size) : box('ftyp', str('isom'), u32a(512), str('isomiso2mp41'));
+  return { file, moov, root, mvhd, mvts, tracks, master, ftyp, duration: master.dur / master.ts };
+}
+
+const str = s => Uint8Array.from(s, c => c.charCodeAt(0));
+function u32a(...n){ const o = new Uint8Array(4 * n.length), dv = new DataView(o.buffer); n.forEach((x, i) => dv.setUint32(4 * i, x >>> 0)); return o; }
+function u32list(arr){ const o = new Uint8Array(4 * arr.length), dv = new DataView(o.buffer); for (let i = 0; i < arr.length; i++) dv.setUint32(4 * i, arr[i] >>> 0); return o; }
+function box(type, ...parts){
+  let len = 8; for (const p of parts) len += p.length;
+  const out = new Uint8Array(len); new DataView(out.buffer).setUint32(0, len);
+  out.set(str(type), 4); let p = 8; for (const x of parts) { out.set(x, p); p += x.length; } return out;
+}
+const fullBox = (type, vf, ...parts) => box(type, u32a(vf), ...parts);
+function patchedCopy(buf, b, off32, off64, dur){
+  const c = buf.slice(b.start, b.end), base = b.body - b.start, dv = new DataView(c.buffer);
+  if (c[base] === 1) dv.setBigUint64(base + off64, BigInt(Math.max(0, Math.round(dur))));
+  else dv.setUint32(base + off32, Math.min(0xFFFFFFFF, Math.max(0, Math.round(dur))));
+  return c;
+}
+function lastLE(arr, n, v){ let lo = 0, hi = n - 1, r = -1; while (lo <= hi) { const m = (lo + hi) >> 1; if (arr[m] <= v) { r = m; lo = m + 1; } else hi = m - 1; } return r; }
+function firstGE(arr, n, v){ let lo = 0, hi = n; while (lo < hi) { const m = (lo + hi) >> 1; if (arr[m] >= v) hi = m; else lo = m + 1; } return lo; }
+
+function tablesFor(t, first, end){
+  const cnt = end - first, T = {};
+  const e1 = []; for (let i = first; i < end; i++) { const d = t.delta[i], l = e1[e1.length - 1]; if (l && l[1] === d) l[0]++; else e1.push([1, d]); }
+  T.stts = fullBox('stts', 0, u32a(e1.length), u32list(e1.flat()));
+  if (t.cts) { const e = []; for (let i = first; i < end; i++) { const d = t.cts[i], l = e[e.length - 1]; if (l && l[1] === d) l[0]++; else e.push([1, d]); }
+    T.ctts = fullBox('ctts', t.cttsVer << 24, u32a(e.length), u32list(e.flat())); }
+  if (t.sync) { const s = []; for (let i = first; i < end; i++) if (t.sync[i]) s.push(i - first + 1); T.stss = fullBox('stss', 0, u32a(s.length), u32list(s)); }
+  T.stsz = fullBox('stsz', 0, u32a(0, cnt), u32list(t.sizes.subarray(first, end)));
+  const runs = []; let cur = null;
+  for (let i = first; i < end; i++) {
+    if (cur && t.offs[i] === cur.off + cur.len) { cur.len += t.sizes[i]; cur.cnt++; }
+    else { cur = { off: t.offs[i], len: t.sizes[i], cnt: 1, rel: 0 }; runs.push(cur); } }
+  const sc = []; runs.forEach((r, i) => { if (!sc.length || sc[sc.length - 1][1] !== r.cnt) sc.push([i + 1, r.cnt, 1]); });
+  T.stsc = fullBox('stsc', 0, u32a(sc.length), u32list(sc.flat()));
+  T.runs = runs;
+  return T;
+}
+
+const CONT = new Set(['mdia', 'minf', 'stbl']);
+function rebuild(buf, b, fn){
+  const r = fn(b); if (r) return r;
+  if (!CONT.has(b.type)) return buf.subarray(b.start, b.end);
+  return box(b.type, ...parseBoxes(buf, b.body, b.end).map(k => rebuild(buf, k, fn)));
+}
+
+function buildMoov(info, sels, base, co64){
+  const { moov, root, mvts } = info;
+  let movieDur = 0; for (const s of sels.values()) movieDur = Math.max(movieDur, s.movieDur);
+  const parts = [];
+  for (const k of parseBoxes(moov, root.body, root.end)) {
+    if (k.type === 'mvhd') { parts.push(patchedCopy(moov, k, 16, 24, movieDur)); continue; }
+    if (k.type !== 'trak') { parts.push(moov.subarray(k.start, k.end)); continue; }
+    const t = info.tracks.find(x => x.trak.start === k.start), s = t && sels.get(t);
+    if (!s) continue;
+    const offs = s.T.runs.map(r => base + r.rel);
+    const ob = co64
+      ? fullBox('co64', 0, u32a(offs.length), (() => { const o = new Uint8Array(8 * offs.length), dv = new DataView(o.buffer); offs.forEach((x, i) => dv.setBigUint64(8 * i, BigInt(x))); return o; })())
+      : fullBox('stco', 0, u32a(offs.length), u32list(offs));
+    const edts = box('edts', fullBox('elst', 0, u32a(1, Math.max(0, s.movieDur), s.mediaTime >>> 0, 0x00010000)));
+    const tp = [];
+    for (const c of parseBoxes(moov, k.body, k.end)) {
+      if (c.type === 'tkhd') { tp.push(patchedCopy(moov, c, 20, 28, s.movieDur), edts); }
+      else if (c.type === 'edts') continue;
+      else if (c.type === 'mdia') tp.push(rebuild(moov, c, b => {
+        if (b.type === 'mdhd') return patchedCopy(moov, b, 16, 24, s.mediaDur);
+        if (b.type === 'stco' || b.type === 'co64') return ob;
+        return s.T[b.type];
+      }));
+      else tp.push(moov.subarray(c.start, c.end));
+    }
+    parts.push(box('trak', ...tp));
+  }
+  return box('moov', ...parts);
+}
+
+function snap(info, t){
+  const m = info.master;
+  if (t >= info.duration - 0.001) return m.n;
+  let i = lastLE(m.dts, m.n, t * m.ts); if (i < 0) i = 0;
+  while (i > 0 && m.sync && !m.sync[i]) i--;
+  return i;
+}
+
+async function splitOne(info, a, b){
+  const m = info.master, bs = snap(info, a), be = snap(info, b);
+  if (be <= bs) return null;
+  const Ts = m.dts[bs] / m.ts, Te = be < m.n ? m.dts[be] / m.ts : Infinity;
+  const sels = new Map();
+  for (const t of info.tracks) {
+    let f, e, mediaTime;
+    if (t === m) { f = bs; e = be; mediaTime = t.cts ? Math.max(0, t.cts[bs]) : 0; }
+    else {
+      f = lastLE(t.dts, t.n, Ts * t.ts); if (f < 0) f = 0;
+      e = Te === Infinity ? t.n : firstGE(t.dts, t.n, Te * t.ts);
+      if (e <= f) continue;
+      mediaTime = Math.max(0, Math.round(Ts * t.ts - t.dts[f]));
+    }
+    const mediaDur = (t.dts[e - 1] + t.delta[e - 1]) - t.dts[f];
+    let span = mediaDur - mediaTime;
+    if (t.cts) {
+      let mn = Infinity, mx = -Infinity;
+      for (let i = f; i < e; i++) { const p0 = t.dts[i] + t.cts[i]; if (p0 < mn) mn = p0; if (p0 + t.delta[i] > mx) mx = p0 + t.delta[i]; }
+      mediaTime = Math.max(0, Math.round(mn - t.dts[f])); span = mx - mn;
+    }
+    const movieDur = Math.round(span / t.ts * info.mvts);
+    sels.set(t, { first: f, end: e, mediaTime, mediaDur, movieDur, T: tablesFor(t, f, e) });
+  }
+  const all = []; for (const s of sels.values()) all.push(...s.T.runs);
+  const sorted = all.slice().sort((x, y) => x.off - y.off);
+  let total = 0; for (const r of sorted) { r.rel = total; total += r.len; }
+  const co64 = total + info.ftyp.length > 0xF0000000 - 4e6;
+  const size0 = buildMoov(info, sels, 0, co64).length;
+  const hdr = total + 8 <= 0xFFFFFFFF ? 8 : 16;
+  const base = info.ftyp.length + size0 + hdr;
+  const moovBytes = buildMoov(info, sels, base, co64);
+  const mdatHdr = hdr === 8 ? (() => { const o = new Uint8Array(8); new DataView(o.buffer).setUint32(0, total + 8); o.set(str('mdat'), 4); return o; })() : (() => { const o = new Uint8Array(16), dv = new DataView(o.buffer); dv.setUint32(0, 1); o.set(str('mdat'), 4); dv.setBigUint64(8, BigInt(total + 16)); return o; })();
+  const slices = []; let cur = null;
+  for (const r of sorted) {
+    if (cur && cur.off + cur.len === r.off) cur.len += r.len; else { cur = { off: r.off, len: r.len }; slices.push(cur); } }
+  const blob = new Blob([info.ftyp, moovBytes, mdatHdr, ...slices.map(s => info.file.slice(s.off, s.off + s.len))], { type: 'video/mp4' });
+  return { blob, start: Ts, end: Te === Infinity ? info.duration : Te, size: blob.size };
+}
+/*ENDCORE*/
+
+/* ---------- UI ---------- */
+const $ = id => document.getElementById(id);
+let file = null, duration = 0, segs = [], busy = false;
 const pad = n => String(n).padStart(2, '0');
 function fmt(s){ s = Math.max(0, Math.round(s)); return pad(Math.floor(s/3600))+':'+pad(Math.floor(s/60)%60)+':'+pad(s%60); }
-function parse(t){
-  const p = String(t).trim().split(':').map(Number);
-  if (p.some(isNaN)) return NaN;
-  return p.reduce((a, x) => a*60 + x, 0);
-}
-function log(msg, cls){
-  const d = document.createElement('div'); if (cls) d.className = cls; d.textContent = msg;
-  $('log').appendChild(d); $('log').scrollTop = 1e9;
-}
+function parse(t){ const p = String(t).trim().split(':').map(Number); if (p.some(isNaN)) return NaN; return p.reduce((a, x) => a*60 + x, 0); }
+function log(msg, cls){ const d = document.createElement('div'); if (cls) d.className = cls; d.textContent = msg; $('log').appendChild(d); $('log').scrollTop = 1e9; }
+function dbg(msg){ const d = $('dbg'); d.textContent += msg + '\n'; }
 
-$('file').addEventListener('change', e => {
-  file = e.target.files[0]; if (!file) return;
+function openVideo(f){
+  file = f;
   const v = $('v'); v.src = URL.createObjectURL(file); v.style.display = 'block';
-  v.onloadedmetadata = () => {
-    duration = v.duration;
+  duration = 0; segs = []; render();
+  $('info').textContent = file.name + ' · ' + (file.size/1e9).toFixed(2) + ' GB · กำลังอ่านความยาว...';
+  loadMp4(file).then(info => {
+    duration = info.duration;
     $('info').textContent = file.name + ' · ' + (file.size/1e9).toFixed(2) + ' GB · ความยาว ' + fmt(duration);
-    segs = []; render();
-  };
-  v.onerror = () => { $('info').textContent = 'เบราว์เซอร์เล่นไฟล์นี้ไม่ได้ในหน้าตัวอย่าง แต่ยังตัดได้ (ใส่เวลาเอง)'; };
-});
+  }).catch(err => { $('info').textContent = file.name + ' — ' + err.message; });
+  v.onloadedmetadata = () => { if (!duration) { duration = v.duration; $('info').textContent = file.name + ' · ความยาว ' + fmt(duration); } edDraw(); };
+}
+$('file').addEventListener('change', e => { if (e.target.files[0]) openVideo(e.target.files[0]); });
 
 function render(){
-  const box = $('segs'); box.innerHTML = '';
+  const box = $('segs'); box.innerHTML = ''; box.classList.toggle('withEp', $('epOn').checked);
   segs.forEach((s, i) => {
     const r = document.createElement('div'); r.className = 'seg';
     r.innerHTML = '<span class="n">'+(i+1)+'</span>';
-    const nm = document.createElement('input'); nm.type = 'text'; nm.value = s.name;
-    nm.oninput = () => s.name = nm.value;
+    const nm = document.createElement('input'); nm.type = 'text'; nm.value = s.name; nm.oninput = () => s.name = nm.value;
+    const ep = document.createElement('input'); ep.type = 'text'; ep.className = 'ep'; ep.value = s.ep || ''; ep.placeholder = 'EP'; ep.oninput = () => s.ep = ep.value;
     const a = document.createElement('input'); a.type = 'text'; a.value = fmt(s.start);
     a.onchange = () => { const x = parse(a.value); if (!isNaN(x)) s.start = x; a.value = fmt(s.start); };
     const b = document.createElement('input'); b.type = 'text'; b.value = fmt(s.end);
     b.onchange = () => { const x = parse(b.value); if (!isNaN(x)) s.end = x; b.value = fmt(s.end); };
     const d = document.createElement('button'); d.className = 'sec'; d.textContent = '✕';
     d.onclick = () => { segs.splice(i, 1); render(); };
-    r.append(nm, a, b, d); box.appendChild(r);
+    r.append(nm, ep, a, b, d); box.appendChild(r);
   });
   $('segHint').style.display = segs.length ? 'none' : 'block';
   $('go').disabled = !segs.length || !file || busy;
 }
 const base = () => (file ? file.name.replace(/\.[^.]+$/, '') : 'ตอน');
-
-$('add').onclick = () => {
-  if (!file) return;
-  const last = segs.length ? segs[segs.length-1].end : 0;
-  segs.push({ name: base()+'_'+pad(segs.length+1), start: last, end: Math.min(duration, last+600) }); render();
-};
-$('mark').onclick = () => {
-  if (!file) return;
-  const t = $('v').currentTime;
-  const last = segs.length ? segs[segs.length-1].end : 0;
-  if (t <= last) return;
-  segs.push({ name: base()+'_'+pad(segs.length+1), start: last, end: t }); render();
-};
+const epText = i => ($('epTpl').value || 'EP.{n}').replace('{n}', (parseInt($('epStart').value) || 0) + i);
+const mk = (i, start, end) => ({ name: base()+'_'+pad(i+1), start, end, ep: epText(i) });
+$('add').onclick = () => { if (!file) return; const last = segs.length ? segs[segs.length-1].end : 0;
+  segs.push(mk(segs.length, last, Math.min(duration || last+600, last+600))); render(); };
+$('mark').onclick = () => { if (!file) return; const t = $('v').currentTime, last = segs.length ? segs[segs.length-1].end : 0;
+  if (t <= last) return; segs.push(mk(segs.length, last, t)); render(); };
 $('split').onclick = () => {
   if (!file || !duration) return;
-  const step = Math.max(1, +$('every').value) * 60; segs = [];
-  for (let t = 0, i = 1; t < duration - 1; t += step, i++)
-    segs.push({ name: base()+'_'+pad(i), start: t, end: Math.min(duration, t+step) });
+  const step = Math.max(1, Math.round(+$('every').value * 60)); segs = [];
+  for (let t = 0, i = 1; t < duration - 1; t += step, i++) segs.push(mk(i-1, t, Math.min(duration, t+step)));
   render();
 };
 
-async function loadFF(){
-  if (loaded) return;
-  $('status').textContent = 'กำลังโหลดตัวตัดวิดีโอ (ครั้งแรกประมาณ 30 MB)...';
-  if (typeof FFmpegWASM === 'undefined' || typeof FFmpegUtil === 'undefined')
-    throw new Error('โหลดไลบรารีจาก CDN ไม่สำเร็จ — ต้องเปิดผ่านเน็ตและผ่านลิงก์ https (เช่น GitHub Pages) ไม่ใช่พรีวิวในแชท');
-  const { FFmpeg } = FFmpegWASM, { toBlobURL } = FFmpegUtil;
-  const cdn = 'https://cdn.jsdelivr.net/npm/';
-  const attempts = ['esm', 'umd'];
-  let lastErr = null;
-  for (const kind of attempts) {
-    try {
-      $('status').textContent = 'กำลังโหลดตัวตัดวิดีโอ (' + kind + ')...';
-      ff = new FFmpeg();
-      ff.on('log', ({ message }) => { const d=$('dbg'); d.textContent += message + '\n'; d.scrollTop = 1e9; });
-      ff.on('progress', ({ progress }) => {
-        if (progress >= 0 && progress <= 1) $('prog').style.width = (progress*100).toFixed(0) + '%';
-      });
-      const core = cdn + '@ffmpeg/core@0.12.6/dist/' + kind + '/';
-      await ff.load({
-        classWorkerURL: await toBlobURL(cdn+'@ffmpeg/ffmpeg@0.12.10/dist/umd/814.ffmpeg.js', 'text/javascript'),
-        coreURL: await toBlobURL(core + 'ffmpeg-core.js', 'text/javascript'),
-        wasmURL: await toBlobURL(core + 'ffmpeg-core.wasm', 'application/wasm'),
-      });
-      loaded = true; lastErr = null;
-      $('dbg').textContent += '[โหลดสำเร็จด้วยโหมด ' + kind + ']\n';
-      break;
-    } catch (e) {
-      lastErr = e;
-      $('dbg').textContent += '[โหมด ' + kind + ' ล้มเหลว: ' + (e.message || e) + ']\n';
-      try { ff.terminate(); } catch (_) {}
-    }
-  }
-  if (lastErr) throw lastErr;
-}
-
-function save(data, name){
-  const url = URL.createObjectURL(new Blob([data]));
+function save(blob, name){
+  const url = URL.createObjectURL(blob);
   const a = document.createElement('a'); a.href = url; a.download = name;
   document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 60000);
+  setTimeout(() => URL.revokeObjectURL(url), 10 * 60 * 1000);
 }
 
+
+/* ---------- Overlay (banner / EP text) ---------- */
+let bannerImg = null;
+const B = { x: 0.73, y: 0.03, w: 0.25 }, T = { x: 0.02, y: 0.03, s: 0.09 };   // สัดส่วนของความกว้าง/ความสูงภาพ
+const FONT = s => 'bold ' + Math.round(s) + 'px "Noto Sans Thai", "Leelawadee UI", Tahoma, system-ui, sans-serif';
+const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+
+async function setBanner(f){
+  if (!f || !String(f.type).startsWith('image/')) return;
+  const im = new Image(); im.src = URL.createObjectURL(f);
+  try { await im.decode(); } catch (_) { alert('เปิดรูปนี้ไม่ได้'); return; }
+  bannerImg = im; B.w = 0.25; B.x = 1 - B.w - 0.02; B.y = 0.03;
+  $('dzName').textContent = '✓ ' + (f.name || 'รูปจากคลิปบอร์ด') + ' (' + im.naturalWidth + '×' + im.naturalHeight + ')';
+  edDraw();
+}
+$('banner').addEventListener('change', e => { setBanner(e.target.files[0]); e.target.value = ''; });
+$('bannerClear').onclick = () => { bannerImg = null; $('dzName').textContent = ''; edDraw(); };
+$('bReset').onclick = () => { B.w = 0.25; B.x = 1 - B.w - 0.02; B.y = 0.03; T.x = 0.02; T.y = 0.03; T.s = 0.09; edDraw(); };
+$('epOn').onchange = () => { render(); edDraw(); };
+$('epReset').onclick = () => { segs.forEach((s, i) => s.ep = epText(i)); render(); edDraw(); };
+['bOp', 'tColor', 'epTpl', 'epStart'].forEach(id => $(id).addEventListener('input', () => edDraw()));
+
+/* ลากวาง: รูปแบนเนอร์ / วิดีโอ (ที่ไหนก็ได้ในหน้า) */
+const dz = $('dz');
+['dragenter', 'dragover'].forEach(ev => window.addEventListener(ev, e => { e.preventDefault(); if (dz.contains(e.target)) dz.classList.add('over'); }));
+['dragleave', 'drop'].forEach(ev => window.addEventListener(ev, e => { if (ev === 'drop' || !dz.contains(e.relatedTarget)) dz.classList.remove('over'); }));
+window.addEventListener('drop', e => {
+  e.preventDefault();
+  for (const f of e.dataTransfer.files) {
+    if (String(f.type).startsWith('image/')) setBanner(f);
+    else if (String(f.type).startsWith('video/') || /\.(mp4|m4v|mov)$/i.test(f.name)) openVideo(f);
+  }
+});
+document.addEventListener('paste', e => { for (const it of (e.clipboardData && e.clipboardData.items) || []) if (it.type.startsWith('image/')) setBanner(it.getAsFile()); });
+
+function getOpts(){
+  return { img: bannerImg, B, T, bOp: clamp((+$('bOp').value || 100) / 100, 0.05, 1), bSec: +$('bSec').value || 0,
+    epOn: $('epOn').checked, tColor: $('tColor').value, tSec: +$('tSec').value || 0,
+    maxH: +$('maxH').value, bitrate: (+$('bitrate').value || 5) * 1e6 };
+}
+function drawOverlays(c, W, H, t, o, text){
+  if (o.img && (!o.bSec || t < o.bSec)) {
+    const w = W * o.B.w, h = w * o.img.naturalHeight / o.img.naturalWidth;
+    c.globalAlpha = o.bOp; c.drawImage(o.img, o.B.x * W, o.B.y * H, w, h); c.globalAlpha = 1;
+  }
+  if (o.epOn && text && (!o.tSec || t < o.tSec)) {
+    const fs = Math.round(H * o.T.s);
+    c.font = FONT(fs); c.textBaseline = 'top'; c.textAlign = 'left'; c.lineJoin = 'round';
+    c.lineWidth = Math.max(2, fs * 0.14); c.strokeStyle = 'rgba(0,0,0,.85)'; c.strokeText(text, o.T.x * W, o.T.y * H);
+    c.fillStyle = o.tColor; c.fillText(text, o.T.x * W, o.T.y * H);
+  }
+}
+function fitSize(vw, vh, maxH){ let W = vw, H = vh; if (H > maxH) { W = Math.round(W * maxH / H); H = maxH; } return [W - W % 2, H - H % 2]; }
+
+/* ---------- ตัวแก้ไขบนภาพตัวอย่าง ---------- */
+const ed = $('ed'), ec = ed.getContext('2d'); let sel = null, drag = null;
+const HANDLE = 22;
+function edText(){ const t = $('v').currentTime || 0, s = segs.find(s => t >= s.start && t <= s.end) || segs[0]; return (s && s.ep) || epText(0); }
+function edItems(){
+  const W = ed.width, H = ed.height, o = getOpts(), a = [];
+  if (o.img) { const w = W * B.w; a.push({ k: 'b', x: B.x * W, y: B.y * H, w, h: w * o.img.naturalHeight / o.img.naturalWidth }); }
+  if (o.epOn) { const fs = H * T.s; ec.font = FONT(fs); a.push({ k: 't', x: T.x * W, y: T.y * H, w: ec.measureText(edText()).width, h: fs * 1.15 }); }
+  return a;
+}
+function edDraw(){
+  const v = $('v'), ar = v.videoWidth ? v.videoHeight / v.videoWidth : 9 / 16, W = 960, H = Math.round(W * ar);
+  if (ed.width !== W || ed.height !== H) { ed.width = W; ed.height = H; }
+  ec.fillStyle = '#000'; ec.fillRect(0, 0, W, H);
+  if (v.videoWidth && v.readyState >= 2) { try { ec.drawImage(v, 0, 0, W, H); } catch (_) {} }
+  const o = getOpts(); drawOverlays(ec, W, H, 0, o, edText());
+  for (const it of edItems()) {
+    ec.save(); ec.setLineDash([7, 5]); ec.lineWidth = 2; ec.strokeStyle = it.k === sel ? '#5b8cff' : 'rgba(255,255,255,.75)';
+    ec.strokeRect(it.x, it.y, it.w, it.h); ec.setLineDash([]);
+    ec.fillStyle = '#5b8cff'; ec.strokeStyle = '#fff'; ec.lineWidth = 2;
+    ec.beginPath(); ec.rect(it.x + it.w - HANDLE / 2, it.y + it.h - HANDLE / 2, HANDLE, HANDLE); ec.fill(); ec.stroke(); ec.restore();
+  }
+}
+function edPos(e){ const r = ed.getBoundingClientRect(); return [(e.clientX - r.left) * ed.width / r.width, (e.clientY - r.top) * ed.height / r.height]; }
+function edHit(px, py){
+  const items = edItems().reverse();
+  for (const it of items) if (Math.abs(px - (it.x + it.w)) <= HANDLE && Math.abs(py - (it.y + it.h)) <= HANDLE) return { it, mode: 'resize' };
+  for (const it of items) if (px >= it.x && px <= it.x + it.w && py >= it.y && py <= it.y + it.h) return { it, mode: 'move' };
+  return null;
+}
+ed.addEventListener('pointerdown', e => {
+  const [px, py] = edPos(e), h = edHit(px, py); if (!h) { sel = null; edDraw(); return; }
+  sel = h.it.k; drag = { k: h.it.k, mode: h.mode, px, py, it: h.it, B: { ...B }, T: { ...T } };
+  ed.setPointerCapture(e.pointerId); edDraw(); e.preventDefault();
+});
+ed.addEventListener('pointermove', e => {
+  const [px, py] = edPos(e), W = ed.width, H = ed.height;
+  if (!drag) { const h = edHit(px, py); ed.style.cursor = !h ? 'default' : h.mode === 'resize' ? 'nwse-resize' : 'move'; return; }
+  const dx = (px - drag.px) / W, dy = (py - drag.py) / H;
+  if (drag.k === 'b') {
+    if (drag.mode === 'move') { const hh = drag.it.h / H; B.x = clamp(drag.B.x + dx, 0, 1 - B.w); B.y = clamp(drag.B.y + dy, 0, 1 - hh); }
+    else { B.w = clamp((px - drag.it.x) / W, 0.03, 1 - B.x); }
+  } else {
+    if (drag.mode === 'move') { T.x = clamp(drag.T.x + dx, 0, 0.98); T.y = clamp(drag.T.y + dy, 0, 0.98); }
+    else { T.s = clamp(drag.T.s * Math.max(0.1, (px - drag.it.x) / drag.it.w), 0.02, 0.4); }
+  }
+  edDraw();
+});
+['pointerup', 'pointercancel'].forEach(ev => ed.addEventListener(ev, () => { drag = null; }));
+ed.addEventListener('wheel', e => {
+  const [px, py] = edPos(e), h = edHit(px, py); if (!h) return;
+  e.preventDefault(); const f = e.deltaY < 0 ? 1.06 : 1 / 1.06;
+  if (h.it.k === 'b') B.w = clamp(B.w * f, 0.03, 1 - B.x); else T.s = clamp(T.s * f, 0.02, 0.4);
+  edDraw();
+}, { passive: false });
+$('edT').addEventListener('input', () => { const v = $('v'); if (v.duration) v.currentTime = $('edT').value / 1000 * v.duration; });
+['loadeddata', 'seeked'].forEach(ev => $('v').addEventListener(ev, edDraw));
+edDraw();
+
+function pickMime(){
+  const list = ['video/mp4;codecs=avc1.640028,mp4a.40.2', 'video/mp4;codecs=avc1,mp4a.40.2', 'video/mp4',
+    'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
+  return list.find(m => window.MediaRecorder && MediaRecorder.isTypeSupported(m)) || '';
+}
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+async function overlaySegment(blob, text, o, onProg){
+  if (!window.MediaRecorder) throw new Error('เบราว์เซอร์นี้ไม่รองรับการอัดวิดีโอ (ใช้ Chrome หรือ Edge)');
+  const url = URL.createObjectURL(blob), v = document.createElement('video');
+  v.src = url; v.playsInline = true; v.preload = 'auto';
+  await new Promise((res, rej) => { v.onloadedmetadata = res; v.onerror = () => rej(new Error('เบราว์เซอร์เล่นวิดีโอชนิดนี้ไม่ได้ จึงใส่ข้อความ/แบนเนอร์ไม่ได้')); });
+  const [W, H] = fitSize(v.videoWidth, v.videoHeight, o.maxH);
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const c = cv.getContext('2d');
+  const AC = window.AudioContext || window.webkitAudioContext, ac = new AC(), dest = ac.createMediaStreamDestination();
+  ac.createMediaElementSource(v).connect(dest); await ac.resume();
+  const stream = cv.captureStream(30); dest.stream.getAudioTracks().forEach(t => stream.addTrack(t));
+  const mime = pickMime(), rec = new MediaRecorder(stream, mime ? { mimeType: mime, videoBitsPerSecond: o.bitrate } : { videoBitsPerSecond: o.bitrate });
+  const chunks = []; rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+  const stopped = new Promise(r => rec.onstop = r);
+  const draw = () => { c.drawImage(v, 0, 0, W, H); drawOverlays(c, W, H, v.currentTime, o, text); };
+  draw(); rec.start(1000); await v.play();
+  await new Promise((res, rej) => {
+    let last = v.currentTime, lastAt = Date.now(), dead = false;
+    const wd = setInterval(() => {
+      if (v.currentTime !== last) { last = v.currentTime; lastAt = Date.now(); }
+      else if (!document.hidden && Date.now() - lastAt > 20000) { clearInterval(wd); dead = true; rej(new Error('การเล่นวิดีโอค้าง')); }
+    }, 2000);
+    v.onended = () => { clearInterval(wd); res(); };
+    const tick = () => { if (dead) return; draw(); onProg(v.duration ? v.currentTime / v.duration : 0);
+      if (!v.ended) { if (v.requestVideoFrameCallback) v.requestVideoFrameCallback(tick); else requestAnimationFrame(tick); } };
+    tick();
+  });
+  draw(); await sleep(150); rec.stop(); await stopped;
+  try { ac.close(); } catch (_) {}
+  URL.revokeObjectURL(url);
+  const type = (rec.mimeType || mime || 'video/webm').split(';')[0];
+  return { blob: new Blob(chunks, { type }), ext: type.includes('mp4') ? '.mp4' : '.webm' };
+}
+document.addEventListener('visibilitychange', () => { if (document.hidden && busy) log('⚠ แท็บถูกซ่อน ภาพอาจกระตุกหรือขาดหาย ให้กลับมาที่แท็บนี้', 'er'); });
+
 $('go').onclick = async () => {
-  if (busy) return; busy = true; $('go').disabled = true; $('log').innerHTML = '';
-  let mounted = false;
+  if (busy) return; busy = true; $('go').disabled = true; $('log').innerHTML = ''; $('dbg').textContent = ''; $('prog').style.width = '0%';
   try {
-    await loadFF();
-    const ext = (file.name.match(/\.[^.]+$/) || ['.mp4'])[0];
-    try { await ff.createDir('/in'); } catch(e){}
-    const safe = new File([file], 'input' + ext);
-    await ff.mount('WORKERFS', { files: [safe] }, '/in'); mounted = true;
-    const src = '/in/input' + ext;
-    const results = [];
+    $('status').textContent = 'กำลังอ่านโครงสร้างไฟล์...';
+    const info = await loadMp4(file);
+    dbg('แทร็ก: ' + info.tracks.map(t => t.handler + ' (' + t.n + ' ตัวอย่าง)').join(', ') + ' · ความยาว ' + fmt(info.duration));
+    const ext0 = (file.name.match(/\.[^.]+$/) || ['.mp4'])[0]; const keep = [];
+    const o = getOpts(), useOv = !!(o.img || o.epOn); let wl = null;
+    if (useOv) { try { wl = await navigator.wakeLock.request('screen'); } catch (_) {} dbg('โหมดใส่แบนเนอร์/ข้อความ: ' + (pickMime() || 'ค่าเริ่มต้นของเบราว์เซอร์')); }
     for (let i = 0; i < segs.length; i++) {
       const s = segs[i];
-      if (!(s.end > s.start)) { log('ข้ามตอน '+(i+1)+' (เวลาไม่ถูกต้อง)', 'er'); continue; }
-      $('status').textContent = 'กำลังตัดตอน '+(i+1)+' / '+segs.length;
-      $('prog').style.width = '0%';
-      const out = 'out'+i+ext;
-      const args = ['-ss', String(s.start), '-i', src, '-t', String(s.end - s.start)];
-      if ($('accurate').checked) args.push('-c:v','libx264','-preset','ultrafast','-crf','23','-c:a','aac');
-      else args.push('-c','copy','-avoid_negative_ts','make_zero');
-      args.push(out);
-      const code = await ff.exec(args);
-      if (code !== 0) { log('ตอน '+(i+1)+' ล้มเหลว (รหัส '+code+') ดูรายละเอียดทางเทคนิคด้านล่าง', 'er'); continue; }
-      const data = await ff.readFile(out);
-      await ff.deleteFile(out);
-      const fname = (s.name || 'ตอน'+(i+1)).replace(/[\\/:*?"<>|]/g,'_') + ext;
-      log('✓ ' + fname + ' (' + (data.length/1e6).toFixed(1) + ' MB)', 'ok');
-      if ($('auto').checked) { save(data, fname); await new Promise(r => setTimeout(r, 700)); }
-      else results.push({ data, fname });
+      $('status').textContent = 'กำลังตัดตอน ' + (i+1) + ' / ' + segs.length;
+      if (!(s.end > s.start)) { log('ข้ามตอน ' + (i+1) + ' (เวลาไม่ถูกต้อง)', 'er'); continue; }
+      const r = await splitOne(info, s.start, s.end);
+      if (!r) { log('ข้ามตอน ' + (i+1) + ' (สั้นกว่าระยะห่าง keyframe)', 'er'); continue; }
+      let outBlob = r.blob, ext = ext0;
+      if (useOv) {
+        const res = await overlaySegment(r.blob, s.ep, o, p => { $('status').textContent = 'กำลังใส่แบนเนอร์/ข้อความตอน ' + (i+1) + ' / ' + segs.length + ' (' + Math.round(p*100) + '%)'; });
+        outBlob = res.blob; ext = res.ext;
+      }
+      const fname = (s.name || 'ตอน' + (i+1)).replace(/[\\/:*?"<>|]/g, '_') + ext;
+      log('✓ ' + fname + ' · ' + fmt(r.start) + ' → ' + fmt(r.end) + ' · ' + (outBlob.size/1e6).toFixed(0) + ' MB' + (useOv && s.ep && o.epOn ? ' · ' + s.ep : ''), 'ok');
+      if ($('auto').checked) { save(outBlob, fname); await new Promise(x => setTimeout(x, 900)); } else keep.push({ blob: outBlob, fname });
+      $('prog').style.width = Math.round((i+1) / segs.length * 100) + '%';
     }
-    if (results.length) {
-      const box = document.createElement('div'); box.className = 'row';
-      results.forEach(r => { const b = document.createElement('button'); b.className = 'sec'; b.textContent = '⬇ ' + r.fname; b.onclick = () => save(r.data, r.fname); box.appendChild(b); });
-      $('log').appendChild(box);
-    }
-    $('status').textContent = 'เสร็จแล้ว'; $('prog').style.width = '100%';
-  } catch (e) {
-    log('เกิดข้อผิดพลาด: ' + (e.message || e), 'er'); $('status').textContent = 'ล้มเหลว';
-    loaded = false;
-  }
-  try { if (mounted) await ff.unmount('/in'); } catch(e){}
+    if (keep.length) { const row = document.createElement('div'); row.className = 'row';
+      keep.forEach(k => { const b = document.createElement('button'); b.className = 'sec'; b.textContent = '⬇ ' + k.fname; b.onclick = () => save(k.blob, k.fname); row.appendChild(b); });
+      $('log').appendChild(row); }
+    $('status').textContent = 'เสร็จแล้ว'; try { wl && wl.release(); } catch (_) {}
+  } catch (e) { log('เกิดข้อผิดพลาด: ' + (e.message || e), 'er'); dbg(String(e && e.stack || e)); $('status').textContent = 'ล้มเหลว'; }
   busy = false; render();
 };
 </script>
