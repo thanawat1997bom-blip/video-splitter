@@ -29,6 +29,8 @@ select{background:var(--bg);color:var(--tx);border:1px solid var(--bd);border-ra
 input[type=color]{width:44px;height:34px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);padding:2px}
 .dz{display:block;border:2px dashed var(--bd);border-radius:12px;padding:18px 12px;text-align:center;cursor:pointer;margin-top:6px}
 .dz.over{border-color:var(--ac);background:rgba(91,140,255,.08)}
+.sched span[class^=m-]{display:none;gap:6px;align-items:center;flex-wrap:wrap}
+.sched[data-mode=first] .m-first,.sched[data-mode=repeat] .m-repeat,.sched[data-mode=custom] .m-custom{display:flex}
 #ed{display:block;width:100%;border-radius:10px;margin-top:10px;background:#000;touch-action:none;user-select:none}
 .mut{color:var(--mut);font-size:.88rem}
 .bar{height:10px;background:var(--bd);border-radius:6px;overflow:hidden;margin-top:8px}
@@ -44,30 +46,17 @@ label.chk{display:flex;gap:6px;align-items:center;font-size:.92rem}
 <h1>✂️ ตัดวิดีโอเป็นตอนๆ</h1>
 
 <div class="card">
-  <h2>1. เลือกไฟล์วิดีโอจากเครื่อง</h2>
-  <input type="file" id="file" accept=".mp4,.m4v,.mov,video/mp4,video/quicktime">
-  <div class="mut" id="info" style="margin-top:6px">รองรับ MP4 / MOV · ไฟล์ไม่ถูกอัปโหลดไปไหน ประมวลผลในเครื่องคุณทั้งหมด</div>
+  <h2>1. เลือกไฟล์วิดีโอ</h2>
+  <label class="dz" id="vdz">
+    <input type="file" id="file" accept=".mp4,.m4v,.mov,video/mp4,video/quicktime" hidden>
+    🎬 <b>ลากไฟล์วิดีโอมาวางตรงนี้</b> หรือคลิกเพื่อเลือกไฟล์จากเครื่อง
+    <div class="mut" id="info" style="margin-top:4px">รองรับ MP4 / MOV · ไฟล์ไม่ถูกอัปโหลดไปไหน ประมวลผลในเครื่องคุณทั้งหมด</div>
+  </label>
   <video id="v" controls style="margin-top:10px;display:none"></video>
 </div>
 
 <div class="card">
-  <h2>2. กำหนดจุดตัด</h2>
-  <div class="row" style="margin-top:0">
-    <button class="sec" id="mark">📍 ตัดตรงตำแหน่งที่เล่นอยู่</button>
-    <button class="sec" id="add">+ เพิ่มตอนเอง</button>
-  </div>
-  <div class="row">
-    <span>หรือแบ่งเท่าๆ กันทุก</span>
-    <input type="number" id="every" value="10" min="1" step="any" style="width:80px">
-    <span>นาที</span>
-    <button class="sec" id="split">แบ่งอัตโนมัติ</button>
-  </div>
-  <div id="segs" style="margin-top:14px"></div>
-  <div class="mut" id="segHint">ยังไม่มีตอน — เลือกไฟล์แล้วกดปุ่มด้านบน</div>
-</div>
-
-<div class="card">
-  <h2>3. แบนเนอร์ และข้อความ EP (ไม่บังคับ)</h2>
+  <h2>2. แบนเนอร์ และข้อความ EP (ไม่บังคับ)</h2>
   <div class="mut" style="margin-bottom:6px">ถ้าใช้ข้อใดข้อหนึ่ง ระบบต้องเข้ารหัสวิดีโอใหม่ ซึ่งใช้เวลาเท่าความยาวคลิป (คลิป 10 นาที ใช้ราว 10 นาที) และต้องเปิดแท็บนี้ค้างไว้บนหน้าจอ ห้ามสลับแท็บหรือปิดหน้าจอ ถ้าไม่ใช้ทั้งสองอย่าง จะตัดแบบเร็วเหมือนเดิม</div>
 
   <label class="dz" id="dz">
@@ -79,8 +68,15 @@ label.chk{display:flex;gap:6px;align-items:center;font-size:.92rem}
     <button class="sec" id="bannerClear">ลบแบนเนอร์</button>
     <button class="sec" id="bReset">รีเซ็ตตำแหน่ง</button>
     <span>ความทึบ</span><input type="number" id="bOp" value="100" min="5" max="100" style="width:70px"><span class="mut">%</span>
-    <span>แสดงแบนเนอร์</span><input type="number" id="bSec" value="0" min="0" style="width:70px"><span class="mut">วินาทีแรก (0 = ตลอด)</span>
   </div>
+  <div class="row sched" id="bSched" data-mode="always">
+    <span>การแสดงแบนเนอร์</span>
+    <select id="bMode"><option value="always">ตลอดทั้งตอน</option><option value="first">เฉพาะช่วงต้นตอน</option><option value="repeat">แสดงเป็นช่วงๆ ซ้ำเรื่อยๆ</option><option value="custom">กำหนดช่วงเวลาเอง</option></select>
+    <span class="m-first">แสดง <input type="number" id="bFirst" value="10" min="1" style="width:70px"> วินาทีแรก</span>
+    <span class="m-repeat">แสดงครั้งละ <input type="number" id="bDur" value="10" min="1" style="width:70px"> วินาที ทุกๆ <input type="number" id="bEvery" value="5" min="0.1" step="any" style="width:70px"> นาที เริ่มที่วินาทีที่ <input type="number" id="bStart" value="0" min="0" style="width:70px"></span>
+    <span class="m-custom"><input type="text" id="bRanges" placeholder="เช่น 0:00-0:30, 5:00-5:45, 10:00-10:30" style="min-width:260px"></span>
+  </div>
+  <div class="mut">เวลาที่กำหนดนับจากต้นของแต่ละตอน (ไม่ใช่จากต้นไฟล์ทั้งเรื่อง) และใช้กับทุกตอนเหมือนกัน</div>
 
   <canvas id="ed"></canvas>
   <div class="row"><span class="mut">เลือกเฟรมตัวอย่าง</span><input type="range" id="edT" min="0" max="1000" value="0" style="flex:1;min-width:160px"></div>
@@ -95,15 +91,37 @@ label.chk{display:flex;gap:6px;align-items:center;font-size:.92rem}
   </div>
   <div class="row">
     <span>สี</span><input type="color" id="tColor" value="#ffffff">
-    <span>แสดงข้อความ</span><input type="number" id="tSec" value="0" min="0" style="width:70px"><span class="mut">วินาทีแรก (0 = ตลอด)</span>
   </div>
-  <div class="mut" style="margin-top:4px">แก้ข้อความ EP ของแต่ละตอนได้ในช่อง EP ที่รายการตอนด้านบน (ช่องจะโผล่เมื่อติ๊กใส่ข้อความ)</div>
+  <div class="row sched" id="tSched" data-mode="always">
+    <span>การแสดงข้อความ</span>
+    <select id="tMode"><option value="always">ตลอดทั้งตอน</option><option value="first">เฉพาะช่วงต้นตอน</option><option value="repeat">แสดงเป็นช่วงๆ ซ้ำเรื่อยๆ</option><option value="custom">กำหนดช่วงเวลาเอง</option></select>
+    <span class="m-first">แสดง <input type="number" id="tFirst" value="10" min="1" style="width:70px"> วินาทีแรก</span>
+    <span class="m-repeat">แสดงครั้งละ <input type="number" id="tDur" value="10" min="1" style="width:70px"> วินาที ทุกๆ <input type="number" id="tEvery" value="5" min="0.1" step="any" style="width:70px"> นาที เริ่มที่วินาทีที่ <input type="number" id="tStart" value="0" min="0" style="width:70px"></span>
+    <span class="m-custom"><input type="text" id="tRanges" placeholder="เช่น 0:00-0:30, 5:00-5:45, 10:00-10:30" style="min-width:260px"></span>
+  </div>
+  <div class="mut" style="margin-top:4px">แก้ข้อความ EP ของแต่ละตอนได้ในช่อง EP ของรายการตอน ในหัวข้อ 3 กำหนดจุดตัด (ช่องจะโผล่เมื่อติ๊กใส่ข้อความ)</div>
 
   <h3>⚙️ คุณภาพภาพที่ได้</h3>
   <div class="row" style="margin-top:4px">
     <span>ความสูงสูงสุด</span><select id="maxH"><option value="720">720p</option><option value="1080" selected>1080p</option><option value="4320">ตามต้นฉบับ</option></select>
     <span>บิตเรต</span><select id="bitrate"><option value="3">3 Mbps</option><option value="5" selected>5 Mbps</option><option value="8">8 Mbps</option></select>
   </div>
+</div>
+
+<div class="card">
+  <h2>3. กำหนดจุดตัด</h2>
+  <div class="row" style="margin-top:0">
+    <button class="sec" id="mark">📍 ตัดตรงตำแหน่งที่เล่นอยู่</button>
+    <button class="sec" id="add">+ เพิ่มตอนเอง</button>
+  </div>
+  <div class="row">
+    <span>หรือแบ่งเท่าๆ กันทุก</span>
+    <input type="number" id="every" value="10" min="1" step="any" style="width:80px">
+    <span>นาที</span>
+    <button class="sec" id="split">แบ่งอัตโนมัติ</button>
+  </div>
+  <div id="segs" style="margin-top:14px"></div>
+  <div class="mut" id="segHint">ยังไม่มีตอน — เลือกไฟล์แล้วกดปุ่มด้านบน</div>
 </div>
 
 <div class="card">
@@ -413,11 +431,30 @@ $('bReset').onclick = () => { B.w = 0.25; B.x = 1 - B.w - 0.02; B.y = 0.03; T.x 
 $('epOn').onchange = () => { render(); edDraw(); };
 $('epReset').onclick = () => { segs.forEach((s, i) => s.ep = epText(i)); render(); edDraw(); };
 ['bOp', 'tColor', 'epTpl', 'epStart'].forEach(id => $(id).addEventListener('input', () => edDraw()));
+['b', 't'].forEach(p => $(p + 'Mode').addEventListener('change', () => { $(p + 'Sched').dataset.mode = $(p + 'Mode').value; }));
+
+/* ตารางเวลาแสดง: เวลาเป็นวินาทีนับจากต้นแต่ละตอน */
+function readSched(p){
+  const ranges = [];
+  for (const part of $(p + 'Ranges').value.split(/[,;\n]+/)) {
+    const m = part.split(/[-–—~]/); if (m.length !== 2) continue;
+    const a = parse(m[0]), b = parse(m[1]); if (!isNaN(a) && !isNaN(b) && b > a) ranges.push([a, b]);
+  }
+  return { mode: $(p + 'Mode').value, first: +$(p + 'First').value || 0, dur: Math.max(0.1, +$(p + 'Dur').value || 10),
+    every: Math.max(0.1, +$(p + 'Every').value || 5), start: Math.max(0, +$(p + 'Start').value || 0), ranges };
+}
+function schedOn(s, t){
+  if (!s || s.mode === 'always') return true;
+  if (s.mode === 'first') return t < s.first;
+  if (s.mode === 'repeat') { if (t < s.start) return false; return ((t - s.start) % Math.max(s.dur, s.every * 60)) < s.dur; }
+  if (s.mode === 'custom') return s.ranges.some(r => t >= r[0] && t < r[1]);
+  return true;
+}
 
 /* ลากวาง: รูปแบนเนอร์ / วิดีโอ (ที่ไหนก็ได้ในหน้า) */
-const dz = $('dz');
-['dragenter', 'dragover'].forEach(ev => window.addEventListener(ev, e => { e.preventDefault(); if (dz.contains(e.target)) dz.classList.add('over'); }));
-['dragleave', 'drop'].forEach(ev => window.addEventListener(ev, e => { if (ev === 'drop' || !dz.contains(e.relatedTarget)) dz.classList.remove('over'); }));
+const dzs = [...document.querySelectorAll('.dz')];
+['dragenter', 'dragover'].forEach(ev => window.addEventListener(ev, e => { e.preventDefault(); dzs.forEach(d => d.classList.toggle('over', d.contains(e.target))); }));
+['dragleave', 'drop'].forEach(ev => window.addEventListener(ev, e => { if (ev === 'drop' || !e.relatedTarget) dzs.forEach(d => d.classList.remove('over')); }));
 window.addEventListener('drop', e => {
   e.preventDefault();
   for (const f of e.dataTransfer.files) {
@@ -428,16 +465,16 @@ window.addEventListener('drop', e => {
 document.addEventListener('paste', e => { for (const it of (e.clipboardData && e.clipboardData.items) || []) if (it.type.startsWith('image/')) setBanner(it.getAsFile()); });
 
 function getOpts(){
-  return { img: bannerImg, B, T, bOp: clamp((+$('bOp').value || 100) / 100, 0.05, 1), bSec: +$('bSec').value || 0,
-    epOn: $('epOn').checked, tColor: $('tColor').value, tSec: +$('tSec').value || 0,
+  return { img: bannerImg, B, T, bOp: clamp((+$('bOp').value || 100) / 100, 0.05, 1), bS: readSched('b'),
+    epOn: $('epOn').checked, tColor: $('tColor').value, tS: readSched('t'),
     maxH: +$('maxH').value, bitrate: (+$('bitrate').value || 5) * 1e6 };
 }
-function drawOverlays(c, W, H, t, o, text){
-  if (o.img && (!o.bSec || t < o.bSec)) {
+function drawOverlays(c, W, H, t, o, text, force){
+  if (o.img && (force || schedOn(o.bS, t))) {
     const w = W * o.B.w, h = w * o.img.naturalHeight / o.img.naturalWidth;
     c.globalAlpha = o.bOp; c.drawImage(o.img, o.B.x * W, o.B.y * H, w, h); c.globalAlpha = 1;
   }
-  if (o.epOn && text && (!o.tSec || t < o.tSec)) {
+  if (o.epOn && text && (force || schedOn(o.tS, t))) {
     const fs = Math.round(H * o.T.s);
     c.font = FONT(fs); c.textBaseline = 'top'; c.textAlign = 'left'; c.lineJoin = 'round';
     c.lineWidth = Math.max(2, fs * 0.14); c.strokeStyle = 'rgba(0,0,0,.85)'; c.strokeText(text, o.T.x * W, o.T.y * H);
@@ -461,7 +498,7 @@ function edDraw(){
   if (ed.width !== W || ed.height !== H) { ed.width = W; ed.height = H; }
   ec.fillStyle = '#000'; ec.fillRect(0, 0, W, H);
   if (v.videoWidth && v.readyState >= 2) { try { ec.drawImage(v, 0, 0, W, H); } catch (_) {} }
-  const o = getOpts(); drawOverlays(ec, W, H, 0, o, edText());
+  const o = getOpts(); drawOverlays(ec, W, H, 0, o, edText(), true);
   for (const it of edItems()) {
     ec.save(); ec.setLineDash([7, 5]); ec.lineWidth = 2; ec.strokeStyle = it.k === sel ? '#5b8cff' : 'rgba(255,255,255,.75)';
     ec.strokeRect(it.x, it.y, it.w, it.h); ec.setLineDash([]);
