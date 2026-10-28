@@ -31,7 +31,7 @@ input[type=color]{width:44px;height:34px;border:1px solid var(--bd);border-radiu
 .dz.over{border-color:var(--ac);background:rgba(91,140,255,.08)}
 .sched span[class^=m-]{display:none;gap:6px;align-items:center;flex-wrap:wrap}
 .sched[data-mode=first] .m-first,.sched[data-mode=repeat] .m-repeat,.sched[data-mode=custom] .m-custom{display:flex}
-#ed{display:block;width:100%;border-radius:10px;margin-top:10px;background:#000;touch-action:none;user-select:none}
+#ed{display:block;height:auto;max-width:100%;margin:10px auto 0;border-radius:10px;background:#000;touch-action:none;user-select:none}
 .mut{color:var(--mut);font-size:.88rem}
 .bar{height:10px;background:var(--bd);border-radius:6px;overflow:hidden;margin-top:8px}
 .bar i{display:block;height:100%;width:0;background:var(--ac);transition:width .2s}
@@ -78,8 +78,10 @@ label.chk{display:flex;gap:6px;align-items:center;font-size:.92rem}
   </div>
   <div class="mut">เวลาที่กำหนดนับจากต้นของแต่ละตอน (ไม่ใช่จากต้นไฟล์ทั้งเรื่อง) และใช้กับทุกตอนเหมือนกัน</div>
 
-  <canvas id="ed"></canvas>
   <div class="row"><span class="mut">เลือกเฟรมตัวอย่าง</span><input type="range" id="edT" min="0" max="1000" value="0" style="flex:1;min-width:160px"></div>
+  <div class="row"><span class="mut">ขนาดภาพตัวอย่าง</span><input type="range" id="edZ" min="15" max="100" value="100" style="flex:1;min-width:160px"><span class="mut" id="edZv" style="min-width:42px">100%</span><button class="sec" id="edFit">พอดีหน้าจอ</button></div>
+  <canvas id="ed"></canvas>
+  <div class="row"><button class="sec" id="goAll2">⬇ ไม่ตัดตอน: ดาวน์โหลดทั้งคลิปพร้อมแบนเนอร์/ข้อความ</button></div>
   <div class="mut" style="margin-top:4px">👆 <b>ลากแบนเนอร์/ข้อความบนภาพ</b> เพื่อย้าย · <b>ลากจุดมุมขวาล่าง</b> เพื่อย่อ/ขยาย · หมุนล้อเมาส์บนภาพก็ย่อ/ขยายได้ (ตำแหน่งและขนาดนี้ใช้กับทุกตอน)</div>
 
   <h3>🔤 ข้อความ EP</h3>
@@ -104,7 +106,7 @@ label.chk{display:flex;gap:6px;align-items:center;font-size:.92rem}
   <h3>⚙️ คุณภาพภาพที่ได้</h3>
   <div class="row" style="margin-top:4px">
     <span>ความสูงสูงสุด</span><select id="maxH"><option value="720">720p</option><option value="1080" selected>1080p</option><option value="4320">ตามต้นฉบับ</option></select>
-    <span>บิตเรต</span><select id="bitrate"><option value="3">3 Mbps</option><option value="5" selected>5 Mbps</option><option value="8">8 Mbps</option></select>
+    <span>บิตเรต</span><select id="bitrate"><option value="3">3 Mbps</option><option value="5" selected>5 Mbps</option><option value="8">8 Mbps</option><option value="12">12 Mbps</option><option value="20">20 Mbps (คมที่สุด ไฟล์ใหญ่)</option></select>
   </div>
 </div>
 
@@ -129,7 +131,8 @@ label.chk{display:flex;gap:6px;align-items:center;font-size:.92rem}
   <div class="mut" style="margin-bottom:8px">โหมดไม่ใส่แบนเนอร์/ข้อความ ตัดแบบไม่เข้ารหัสใหม่ (ภาพไม่เสียคุณภาพ เร็วมาก) จุดตัดจะเลื่อนถอยไปที่ keyframe ก่อนหน้า อาจคลาดเคลื่อนได้ราว 1–10 วินาทีตามไฟล์ ตอนที่ติดกันจะต่อกันพอดี ไม่ซ้ำไม่ขาด</div>
   <label class="chk"><input type="checkbox" id="auto" checked> ดาวน์โหลดอัตโนมัติทุกครั้งที่ตัดเสร็จแต่ละตอน</label>
   <div class="row">
-    <button id="go" disabled>เริ่มตัด</button>
+    <button id="go" disabled>เริ่มตัดเป็นตอน</button>
+    <button class="sec" id="goAll" disabled>⬇ ไม่ตัดตอน: ดาวน์โหลดทั้งคลิปพร้อมแบนเนอร์/ข้อความ</button>
     <span class="mut" id="status"></span>
   </div>
   <div class="bar"><i id="prog"></i></div>
@@ -388,6 +391,7 @@ function render(){
   });
   $('segHint').style.display = segs.length ? 'none' : 'block';
   $('go').disabled = !segs.length || !file || busy;
+  $('goAll').disabled = !file || busy; $('goAll2').disabled = !file || busy;
 }
 const base = () => (file ? file.name.replace(/\.[^.]+$/, '') : 'ตอน');
 const epText = i => ($('epTpl').value || 'EP.{n}').replace('{n}', (parseInt($('epStart').value) || 0) + i);
@@ -485,7 +489,7 @@ function fitSize(vw, vh, maxH){ let W = vw, H = vh; if (H > maxH) { W = Math.rou
 
 /* ---------- ตัวแก้ไขบนภาพตัวอย่าง ---------- */
 const ed = $('ed'), ec = ed.getContext('2d'); let sel = null, drag = null;
-const HANDLE = 22;
+const HANDLE = 22, hs = () => HANDLE * ed.width / Math.max(1, ed.getBoundingClientRect().width);
 function edText(){ const t = $('v').currentTime || 0, s = segs.find(s => t >= s.start && t <= s.end) || segs[0]; return (s && s.ep) || epText(0); }
 function edItems(){
   const W = ed.width, H = ed.height, o = getOpts(), a = [];
@@ -493,23 +497,36 @@ function edItems(){
   if (o.epOn) { const fs = H * T.s; ec.font = FONT(fs); a.push({ k: 't', x: T.x * W, y: T.y * H, w: ec.measureText(edText()).width, h: fs * 1.15 }); }
   return a;
 }
+let edAuto = true;
+function edFitPct(){
+  const cw = (ed.parentElement.clientWidth || 600) - 28, ar = ed.height / ed.width, maxH = Math.max(260, window.innerHeight * 0.7);
+  return clamp(Math.floor(Math.min(cw, maxH / ar) / cw * 100), 15, 100);
+}
+function edLayout(){
+  const cw = (ed.parentElement.clientWidth || 600) - 28, pct = +$('edZ').value;
+  ed.style.width = Math.round(cw * pct / 100) + 'px'; $('edZv').textContent = pct + '%';
+}
+$('edZ').addEventListener('input', () => { edAuto = false; edLayout(); edDraw(); });
+$('edFit').onclick = () => { edAuto = true; $('edZ').value = edFitPct(); edLayout(); edDraw(); };
+window.addEventListener('resize', () => { if (edAuto) $('edZ').value = edFitPct(); edLayout(); edDraw(); });
 function edDraw(){
-  const v = $('v'), ar = v.videoWidth ? v.videoHeight / v.videoWidth : 9 / 16, W = 960, H = Math.round(W * ar);
-  if (ed.width !== W || ed.height !== H) { ed.width = W; ed.height = H; }
+  const v = $('v'), vw = v.videoWidth || 16, vh = v.videoHeight || 9, sc = 960 / Math.max(vw, vh), W = Math.round(vw * sc), H = Math.round(vh * sc);
+  if (ed.width !== W || ed.height !== H) { ed.width = W; ed.height = H; if (edAuto) $('edZ').value = edFitPct(); edLayout(); }
+  const ls = hs() / HANDLE;
   ec.fillStyle = '#000'; ec.fillRect(0, 0, W, H);
   if (v.videoWidth && v.readyState >= 2) { try { ec.drawImage(v, 0, 0, W, H); } catch (_) {} }
   const o = getOpts(); drawOverlays(ec, W, H, 0, o, edText(), true);
   for (const it of edItems()) {
-    ec.save(); ec.setLineDash([7, 5]); ec.lineWidth = 2; ec.strokeStyle = it.k === sel ? '#5b8cff' : 'rgba(255,255,255,.75)';
+    ec.save(); ec.setLineDash([7 * ls, 5 * ls]); ec.lineWidth = 2 * ls; ec.strokeStyle = it.k === sel ? '#5b8cff' : 'rgba(255,255,255,.75)';
     ec.strokeRect(it.x, it.y, it.w, it.h); ec.setLineDash([]);
-    ec.fillStyle = '#5b8cff'; ec.strokeStyle = '#fff'; ec.lineWidth = 2;
-    ec.beginPath(); ec.rect(it.x + it.w - HANDLE / 2, it.y + it.h - HANDLE / 2, HANDLE, HANDLE); ec.fill(); ec.stroke(); ec.restore();
+    ec.fillStyle = '#5b8cff'; ec.strokeStyle = '#fff'; ec.lineWidth = 2 * ls;
+    const hh = hs(); ec.beginPath(); ec.rect(it.x + it.w - hh / 2, it.y + it.h - hh / 2, hh, hh); ec.fill(); ec.stroke(); ec.restore();
   }
 }
 function edPos(e){ const r = ed.getBoundingClientRect(); return [(e.clientX - r.left) * ed.width / r.width, (e.clientY - r.top) * ed.height / r.height]; }
 function edHit(px, py){
   const items = edItems().reverse();
-  for (const it of items) if (Math.abs(px - (it.x + it.w)) <= HANDLE && Math.abs(py - (it.y + it.h)) <= HANDLE) return { it, mode: 'resize' };
+  const hh = hs(); for (const it of items) if (Math.abs(px - (it.x + it.w)) <= hh && Math.abs(py - (it.y + it.h)) <= hh) return { it, mode: 'resize' };
   for (const it of items) if (px >= it.x && px <= it.x + it.w && py >= it.y && py <= it.y + it.h) return { it, mode: 'move' };
   return null;
 }
@@ -549,7 +566,7 @@ function pickMime(){
 }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-async function overlaySegment(blob, text, o, onProg){
+async function overlaySegment(blob, text, o, onProg, sink){
   if (!window.MediaRecorder) throw new Error('เบราว์เซอร์นี้ไม่รองรับการอัดวิดีโอ (ใช้ Chrome หรือ Edge)');
   const url = URL.createObjectURL(blob), v = document.createElement('video');
   v.src = url; v.playsInline = true; v.preload = 'auto';
@@ -560,7 +577,7 @@ async function overlaySegment(blob, text, o, onProg){
   ac.createMediaElementSource(v).connect(dest); await ac.resume();
   const stream = cv.captureStream(30); dest.stream.getAudioTracks().forEach(t => stream.addTrack(t));
   const mime = pickMime(), rec = new MediaRecorder(stream, mime ? { mimeType: mime, videoBitsPerSecond: o.bitrate } : { videoBitsPerSecond: o.bitrate });
-  const chunks = []; rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+  const chunks = []; rec.ondataavailable = e => { if (e.data && e.data.size) { if (sink) sink.write(e.data); else chunks.push(e.data); } };
   const stopped = new Promise(r => rec.onstop = r);
   const draw = () => { c.drawImage(v, 0, 0, W, H); drawOverlays(c, W, H, v.currentTime, o, text); };
   draw(); rec.start(1000); await v.play();
@@ -579,42 +596,76 @@ async function overlaySegment(blob, text, o, onProg){
   try { ac.close(); } catch (_) {}
   URL.revokeObjectURL(url);
   const type = (rec.mimeType || mime || 'video/webm').split(';')[0];
-  return { blob: new Blob(chunks, { type }), ext: type.includes('mp4') ? '.mp4' : '.webm' };
+  return { blob: sink ? null : new Blob(chunks, { type }), ext: type.includes('mp4') ? '.mp4' : '.webm' };
 }
 document.addEventListener('visibilitychange', () => { if (document.hidden && busy) log('⚠ แท็บถูกซ่อน ภาพอาจกระตุกหรือขาดหาย ให้กลับมาที่แท็บนี้', 'er'); });
 
-$('go').onclick = async () => {
-  if (busy) return; busy = true; $('go').disabled = true; $('log').innerHTML = ''; $('dbg').textContent = ''; $('prog').style.width = '0%';
+async function runJob(list, whole, handle){
+  if (busy) return; busy = true; render(); $('log').innerHTML = ''; $('dbg').textContent = ''; $('prog').style.width = '0%';
+  let wl = null;
   try {
-    $('status').textContent = 'กำลังอ่านโครงสร้างไฟล์...';
-    const info = await loadMp4(file);
-    dbg('แทร็ก: ' + info.tracks.map(t => t.handler + ' (' + t.n + ' ตัวอย่าง)').join(', ') + ' · ความยาว ' + fmt(info.duration));
+    const o = getOpts(), useOv = !!(o.img || o.epOn);
+    if (whole && !useOv) throw new Error('ต้องวางรูปแบนเนอร์ หรือติ๊กใส่ข้อความ EP ก่อน');
+    let info = null;
+    if (!whole) {
+      $('status').textContent = 'กำลังอ่านโครงสร้างไฟล์...';
+      info = await loadMp4(file);
+      dbg('แทร็ก: ' + info.tracks.map(t => t.handler + ' (' + t.n + ' ตัวอย่าง)').join(', ') + ' · ความยาว ' + fmt(info.duration));
+    }
     const ext0 = (file.name.match(/\.[^.]+$/) || ['.mp4'])[0]; const keep = [];
-    const o = getOpts(), useOv = !!(o.img || o.epOn); let wl = null;
     if (useOv) { try { wl = await navigator.wakeLock.request('screen'); } catch (_) {} dbg('โหมดใส่แบนเนอร์/ข้อความ: ' + (pickMime() || 'ค่าเริ่มต้นของเบราว์เซอร์')); }
-    for (let i = 0; i < segs.length; i++) {
-      const s = segs[i];
-      $('status').textContent = 'กำลังตัดตอน ' + (i+1) + ' / ' + segs.length;
-      if (!(s.end > s.start)) { log('ข้ามตอน ' + (i+1) + ' (เวลาไม่ถูกต้อง)', 'er'); continue; }
-      const r = await splitOne(info, s.start, s.end);
-      if (!r) { log('ข้ามตอน ' + (i+1) + ' (สั้นกว่าระยะห่าง keyframe)', 'er'); continue; }
-      let outBlob = r.blob, ext = ext0;
+    for (let i = 0; i < list.length; i++) {
+      const s = list[i];
+      $('status').textContent = whole ? 'กำลังใส่แบนเนอร์/ข้อความ...' : 'กำลังตัดตอน ' + (i+1) + ' / ' + list.length;
+      let src, r = null;
+      if (whole) src = file;
+      else {
+        if (!(s.end > s.start)) { log('ข้ามตอน ' + (i+1) + ' (เวลาไม่ถูกต้อง)', 'er'); continue; }
+        r = await splitOne(info, s.start, s.end);
+        if (!r) { log('ข้ามตอน ' + (i+1) + ' (สั้นกว่าระยะห่าง keyframe)', 'er'); continue; }
+        src = r.blob;
+      }
+      let outBlob = src, ext = ext0, savedAs = null;
       if (useOv) {
-        const res = await overlaySegment(r.blob, s.ep, o, p => { $('status').textContent = 'กำลังใส่แบนเนอร์/ข้อความตอน ' + (i+1) + ' / ' + segs.length + ' (' + Math.round(p*100) + '%)'; });
+        let sink = null, writable = null, chain = Promise.resolve();
+        if (handle) { writable = await handle.createWritable(); sink = { write: b => { chain = chain.then(() => writable.write(b)); return chain; } }; }
+        const res = await overlaySegment(src, s.ep, o, p => {
+          $('status').textContent = (whole ? 'กำลังใส่แบนเนอร์/ข้อความ' : 'กำลังใส่แบนเนอร์/ข้อความตอน ' + (i+1) + ' / ' + list.length) + ' (' + Math.round(p*100) + '%)';
+          $('prog').style.width = Math.round((i + p) / list.length * 100) + '%'; }, sink);
+        if (writable) { await chain; await writable.close(); savedAs = handle.name; }
         outBlob = res.blob; ext = res.ext;
       }
-      const fname = (s.name || 'ตอน' + (i+1)).replace(/[\\/:*?"<>|]/g, '_') + ext;
-      log('✓ ' + fname + ' · ' + fmt(r.start) + ' → ' + fmt(r.end) + ' · ' + (outBlob.size/1e6).toFixed(0) + ' MB' + (useOv && s.ep && o.epOn ? ' · ' + s.ep : ''), 'ok');
-      if ($('auto').checked) { save(outBlob, fname); await new Promise(x => setTimeout(x, 900)); } else keep.push({ blob: outBlob, fname });
-      $('prog').style.width = Math.round((i+1) / segs.length * 100) + '%';
+      const fname = savedAs || ((s.name || 'ตอน' + (i+1)).replace(/[\\/:*?"<>|]/g, '_') + ext);
+      const range = whole ? 'ทั้งคลิป' : fmt(r.start) + ' → ' + fmt(r.end);
+      log('✓ ' + fname + ' · ' + range + ' · ' + (outBlob ? (outBlob.size/1e6).toFixed(0) + ' MB' : 'บันทึกลงดิสก์โดยตรงแล้ว') + (useOv && s.ep && o.epOn ? ' · ' + s.ep : ''), 'ok');
+      if (outBlob) { if ($('auto').checked) { save(outBlob, fname); await new Promise(x => setTimeout(x, 900)); } else keep.push({ blob: outBlob, fname }); }
+      $('prog').style.width = Math.round((i+1) / list.length * 100) + '%';
     }
     if (keep.length) { const row = document.createElement('div'); row.className = 'row';
       keep.forEach(k => { const b = document.createElement('button'); b.className = 'sec'; b.textContent = '⬇ ' + k.fname; b.onclick = () => save(k.blob, k.fname); row.appendChild(b); });
       $('log').appendChild(row); }
-    $('status').textContent = 'เสร็จแล้ว'; try { wl && wl.release(); } catch (_) {}
+    $('status').textContent = 'เสร็จแล้ว';
   } catch (e) { log('เกิดข้อผิดพลาด: ' + (e.message || e), 'er'); dbg(String(e && e.stack || e)); $('status').textContent = 'ล้มเหลว'; }
+  try { wl && wl.release(); } catch (_) {}
   busy = false; render();
-};
+}
+$('go').onclick = () => runJob(segs, false, null);
+
+/* ไม่ตัดตอน: ใส่แบนเนอร์/ข้อความทั้งคลิป แล้วดาวน์โหลดไฟล์เดียว */
+async function wholeClip(){
+  if (busy || !file) return;
+  const o = getOpts(); if (!(o.img || o.epOn)) { alert('วางรูปแบนเนอร์ หรือติ๊ก "ใส่ข้อความบนวิดีโอ" ก่อน'); return; }
+  const mime = pickMime(), ext = mime.includes('mp4') ? '.mp4' : '.webm';
+  let handle = null;
+  if (window.showSaveFilePicker) {            // เขียนลงดิสก์ตรงๆ ไม่กินหน่วยความจำ (Chrome/Edge)
+    try { handle = await showSaveFilePicker({ suggestedName: base() + '_banner' + ext, types: [{ description: 'วิดีโอ', accept: { [(mime.split(';')[0] || 'video/webm')]: [ext] } }] }); }
+    catch (e) { if (e && e.name === 'AbortError') return; handle = null; }
+  }
+  $('prog').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  runJob([{ name: base() + '_banner', ep: epText(0) }], true, handle);
+}
+$('goAll').onclick = wholeClip; $('goAll2').onclick = wholeClip;
+
 </script>
 </body>
 </html>
